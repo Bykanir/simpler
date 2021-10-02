@@ -14,6 +14,7 @@ module Simpler
     def make_response(action)
       @request.env['simpler.controller'] = self
       @request.env['simpler.action'] = action
+      @request.env['simpler.params'] = @request.params
 
       set_default_headers
       send(action)
@@ -48,6 +49,18 @@ module Simpler
 
     def render(template)
       @request.env['simpler.template'] = template
+    end
+
+    # Реализуйте возможность устанавливать в методе контроллера статус ответа, например:  
+    # status 201
+    def status(val)
+      @response.status = val
+    end
+
+    # Реализуйте возможность устанавливать в методе контроллера заголовки, например:  
+    # headers['Content-Type'] = 'text/plain'
+    def headers
+      @response.headers
     end
 
   end
