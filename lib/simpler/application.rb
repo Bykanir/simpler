@@ -55,7 +55,6 @@ module Simpler
       controller.make_response(action)
     end
 
-    # Реализуйте механизм обработки исключения когда маршрут для запрашиваемого URL не был найден. В этом случае клиенту должен отдаваться ответ со статусом 404
     def response_not_found
       Rack::Response.new(["Response Not Found\n"], 404, { "Content-Type" => "text/plain" }).finish
     end

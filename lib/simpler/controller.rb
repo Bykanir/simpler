@@ -51,14 +51,10 @@ module Simpler
       @request.env['simpler.template'] = template
     end
 
-    # Реализуйте возможность устанавливать в методе контроллера статус ответа, например:  
-    # status 201
     def status(val)
       @response.status = val
     end
 
-    # Реализуйте возможность устанавливать в методе контроллера заголовки, например:  
-    # headers['Content-Type'] = 'text/plain'
     def headers
       @response.headers
     end
