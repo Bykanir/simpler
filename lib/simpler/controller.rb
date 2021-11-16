@@ -11,14 +11,17 @@ module Simpler
       @response = Rack::Response.new
     end
 
-    def make_response(action)
+    def make_response(action, logger)
       @request.env['simpler.controller'] = self
       @request.env['simpler.action'] = action
-      @request.env['simpler.params'] = @request.params
 
-      set_default_headers
+      set_params
+      log_request(logger)
       send(action)
+      set_headers
+      set_status
       write_response
+      log_response(logger)
 
       @response.finish
     end
@@ -27,6 +30,28 @@ module Simpler
 
     def extract_name
       self.class.name.match('(?<name>.+)Controller')[:name].downcase
+    end
+
+    def set_headers
+      if @request.env['simpler.template'].class == Hash
+        set_response_headers
+      else
+        set_default_headers
+      end
+    end
+
+    def set_response_headers
+      if @request.env['simpler.template'].keys.first == :plain
+        @response['Content-Type'] = 'text/plain'
+      end
+    end
+
+    def set_status
+      return unless @request.env['simpler.template'].class == Hash
+
+      if @request.env['simpler.template'].keys.include?(:status)
+        @response.status = @request.env['simpler.template'][:status]
+      end
     end
 
     def set_default_headers
@@ -40,7 +65,17 @@ module Simpler
     end
 
     def render_body
-      View.new(@request.env).render(binding)
+      if @request.env['simpler.template'].class == Hash
+        render_format
+      else
+        View.new(@request.env).render(binding)
+      end
+    end
+
+    def set_params
+      if @request.env['simpler.action'] == 'show'
+        @request.params['id'] = @request.env['REQUEST_PATH'].gsub(/\D+/, '')
+      end
     end
 
     def params
@@ -51,13 +86,19 @@ module Simpler
       @request.env['simpler.template'] = template
     end
 
-    def status(val)
-      @response.status = val
+    def render_format
+      if @request.env['simpler.template'].keys.first == :plain
+        @request.env['simpler.template'].values.first
+      end
     end
 
-    def headers
-      @response.headers
+    def log_request(logger)
+      logger.info("Handler: #{@request.env['simpler.controller'].class}##{@request.env['simpler.action']}\nParameters: #{params}" )
     end
 
+    def log_response(logger)
+      logger.info("Response: #{@response.status} [#{@response['Content-Type']}] #{@request.env['simpler.template'] || [extract_name, @request.env['simpler.action']].join('/') + '.html.erb'}")
+    end
+    
   end
 end
