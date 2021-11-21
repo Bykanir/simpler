@@ -87,9 +87,38 @@ module Simpler
     end
 
     def render_format
-      if @request.env['simpler.template'].keys.first == :plain
-        @request.env['simpler.template'].values.first
+      format = @request.env['simpler.template'].keys.first
+      text = @request.env['simpler.template'].values.first
+      case format
+      when :json
+        format_json(text)
+      when :xml
+        format_xml(text)
+      when :plain
+        format_plain(text)
       end
+    end
+
+    def format_json(text)
+      json = 'json'
+      type_definition(json)
+      text
+    end
+
+    def format_xml(text)
+      xml = 'xml'
+      type_definition(xml)
+      text
+    end
+
+    def format_plain(text)
+      plain = 'plain'
+      type_definition(plain)
+      text
+    end
+
+    def type_definition(type) 
+      @response['Content-Type'] = "text/#{type}"
     end
 
     def log_request(logger)
